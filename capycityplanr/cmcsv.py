@@ -43,6 +43,7 @@ def clean_csv(data,output_folder):
     file = data['path']
     columns = {}
     unique_columns = []
+    payload = {}
     logging.info('Cleaning CSV ' + os.path.basename(file))
     logging.info('CSV is type ' + type + ' for customer ' + customer_name)
     #Here we get rid of special characters such as ^M that the csv library can't handle
@@ -93,14 +94,37 @@ def clean_csv(data,output_folder):
                 
                 counter += 1
     os.remove(file_backup)
-
-def get_csv_type(csv):
-    if "hdfs" in csv.lower():
+    payload['path'] = file
+    payload['type'] = type
+    payload['columns'] = unique_columns
+    return payload
+def get_csv_type(file):
+    if "hdfs" in file.lower():
         return "hdfs"
-    elif "impala" in csv.lower():
+    elif "impala" in file.lower():
         return "impala"
-    elif "yarn" in csv.lower():
+    elif "yarn" in file.lower():
         return "yarn"
     else:
         return "unknown"
 
+#takes list of columns (accounts) and distingueshes hadoop services from users
+def get_service_accounts(column_list,cdh_service_list):
+    service_accounts = []
+    user_accounts = []
+    accounts = {}
+    for column in column_list:
+        match = 0
+        for service in cdh_service_list:
+            
+            if match > 0:
+                break
+            #if it is a service, add it to service_accounts
+            elif column.translate(None,'\\*./!?#- ') == service.translate(None, '\\*./!?#- '):
+                service_accounts.append(column)
+                match += 1
+        if match == 0:
+            user_accounts.append(column)
+    accounts['service_accounts'] = service_accounts
+    accounts['user_accounts'] = user_accounts
+    return accounts
