@@ -41,6 +41,7 @@ def clean_csv(csv,output_folder):
     logging.info('Cleaning CSV ' +os.path.basename(csv['path']))
     customer_name = csv['customer']
     type = csv['type']
+    logging.info('CSV is type ' + type + ' for customer ' + customer_name)
     #Here we get rid of special characters such as ^M that the csv library can't handle
 
     #Here we parse the columns and get rid of not-unique columns and formatting that doesn't work in Hive
