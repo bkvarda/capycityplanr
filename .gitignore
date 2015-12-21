@@ -10,4 +10,11 @@
 **.csv
 **.Cloudera*
 **/ClouderaStats/*
-
+*.jar
+**.jar
+*.avsc
+**.avsc
+/MAP/*
+*MAP*
+/REDUCE/*
+*REDUCE*
