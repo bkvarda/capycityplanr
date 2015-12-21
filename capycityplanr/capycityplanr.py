@@ -11,7 +11,7 @@ def main():
     output_dir=Config.get('Directories','OutputDirectory')
     logfmt ='%(asctime)s - %(levelname)s - %(message)s'
     datefmt = '%m/%d/%Y %I:%M:%S %p'
-    logging.basicConfig(filename=logging_dir+'/example.log',level=logging.DEBUG,datefmt=datefmt,format=logfmt)
+    logging.basicConfig(filename=logging_dir+'/capycity.log',level=logging.DEBUG,datefmt=datefmt,format=logfmt)
     logging.info('Capycityplanr started')
     logging.info('Config file discovered with the following sections: ' + str(Config.sections()))
     cmcsv.scan_folder(watch_dir)
