@@ -1,0 +1,13 @@
+*.pyc
+*.log
+*.zip
+*.csv
+*Cloudera*
+/ClouderaStats/*
+**.pyc
+**.log
+**.zip
+**.csv
+**.Cloudera*
+**/ClouderaStats/*
+
