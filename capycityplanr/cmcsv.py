@@ -41,8 +41,6 @@ def clean_csv(data,output_folder):
     customer_name = data['customer']
     type = data['type']
     file = data['path']
-    service_accounts = []
-    user_accounts = []
     columns = {}
     unique_columns = []
     logging.info('Cleaning CSV ' + os.path.basename(file))
