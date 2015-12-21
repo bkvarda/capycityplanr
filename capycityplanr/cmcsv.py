@@ -94,6 +94,7 @@ def clean_csv(data,output_folder):
                 
                 counter += 1
     os.remove(file_backup)
+    payload['customer'] = customer_name
     payload['path'] = file
     payload['type'] = type
     payload['columns'] = unique_columns

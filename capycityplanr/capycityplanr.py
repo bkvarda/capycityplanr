@@ -1,4 +1,4 @@
-import logging, cmcsv, ConfigParser
+import logging, cmcsv, ConfigParser, pykite
 
 
 
@@ -11,6 +11,7 @@ def main():
     temp_dir=Config.get('Directories','TempDirectory')
     output_dir=Config.get('Directories','OutputDirectory')
     cdh_service_accounts=Config.get('Services','ServiceAccounts').split(",")
+    kite_path=Config.get('Kite','KitePath')
     logfmt ='%(asctime)s - %(levelname)s - %(message)s'
     datefmt = '%m/%d/%Y %I:%M:%S %p'
     logging.basicConfig(filename=logging_dir+'/capycity.log',level=logging.DEBUG,datefmt=datefmt,format=logfmt)
@@ -26,6 +27,8 @@ def main():
         output = cmcsv.clean_csv(csv,output_dir)
         if output['type'] == 'hdfs':
             accounts = cmcsv.get_service_accounts(output['columns'],cdh_service_accounts)
-            print(accounts['service_accounts'])
+        data = pykite.infer_schema(kite_path,output)
+        data = pykite.create_dataset(kite_path,data)
+        pykite.import_data(kite_path,data) 
     logging.info('Capycityplanr ended')
 main()
