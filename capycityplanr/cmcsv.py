@@ -1,16 +1,18 @@
-import logging, os, csv, zipfile, contextlib, shutil, tempfile
+import logging, os, csv, zipfile, contextlib, shutil, tempfile, subprocess
+from csvobject import CSVObject
 
 
 def scan_folder(folder):
     #Scans folder, returns any new zips to be unzipped
     logging.info('Scanning folder')
     
-
-def extract_csvs(file,output_folder):
+#returns list of CSVObjects
+def extract_csvs(file,config):
     #Extracts csv contents and returns dictionary with csv type as key and location as value
     logging.info('Extracing zip: ' + file)
     #We assume that the customer (and table prefix) name is the name of the zip. 
     customer_name = os.path.splitext(file)[0]
+    output_folder = config.temp_dir
     logging.info('Zip contents are for customer: ' + customer_name)
     csvs_to_process = []
     with contextlib.closing(zipfile.ZipFile(file, "r")) as zip:
@@ -26,48 +28,42 @@ def extract_csvs(file,output_folder):
                 logging.info('Extracting ' + filename + ' to ' + save_location)
                 shutil.copyfileobj(source, target)
                 #add to our list of CSVs that now need to be processed/cleaned
-                csv_info = {}
-                csv_info["path"] = save_location
-                csv_info["type"] = get_csv_type(filename)
-                csv_info["customer"] = customer_name
-                csvs_to_process.append(csv_info)
+                csvobj = CSVObject(path=save_location,type=get_csv_type(filename),customer=customer_name,config=config)
+                csvs_to_process.append(csvobj)
     zip.close()
     logging.info('Extraction of ' + file + ' completed')
     logging.info('List of files to process :' + str(csvs_to_process))
     return csvs_to_process
 
-def clean_csv(data,output_folder):
+def clean_csv(csvobj):
     #Takes dictionary of csv type and location and cleans up so that columns are unique and fit Hive schema
-    customer_name = data['customer']
-    type = data['type']
-    file = data['path']
     columns = {}
     unique_columns = []
     payload = {}
-    logging.info('Cleaning CSV ' + os.path.basename(file))
-    logging.info('CSV is type ' + type + ' for customer ' + customer_name)
+    logging.info('Cleaning CSV ' + os.path.basename(csvobj.path))
+    logging.info('CSV is type ' + csvobj.type + ' for customer ' + csvobj.customer)
     #Here we get rid of special characters such as ^M that the csv library can't handle
-    file_backup = file + '.bak'
+    file_backup = csvobj.path + '.bak'
     with tempfile.NamedTemporaryFile(delete=False) as fh:
-        for line in open(file):
+        for line in open(csvobj.path):
             line = line.rstrip()
             line = line.replace('\r', '')
             fh.write(line + '\n')
-    os.rename(file, file_backup)
-    os.rename(fh.name, file)    
+    os.rename(csvobj.path, file_backup)
+    os.rename(fh.name, csvobj.path)    
     os.remove(file_backup) 
     #Here we parse the columns and get rid of not-unique columns and formatting that doesn't work in Hive
     counter = 0
-    os.rename(file, file_backup)
+    os.rename(csvobj.path, file_backup)
     with open (file_backup, 'rU') as input:
-        with open (file, 'wb') as output:
+        with open (csvobj.path, 'wb') as output:
             writer = csv.writer(output)
             for row in csv.reader(input):
                 #hdfs type has csv header, this effectively removes it
-                if counter == 0 and type == 'hdfs':
+                if counter == 0 and csvobj.type == 'hdfs':
                     pass 
                 #these are columns that need to be parsed
-                elif (counter == 0 and type != 'hdfs') or (counter == 1 and type == 'hdfs'):
+                elif (counter == 0 and csvobj.type != 'hdfs') or (counter == 1 and csvobj.type == 'hdfs'):
                     index = 0
                     for column in row:
                         #if column not unique
@@ -94,11 +90,9 @@ def clean_csv(data,output_folder):
                 
                 counter += 1
     os.remove(file_backup)
-    payload['customer'] = customer_name
-    payload['path'] = file
-    payload['type'] = type
-    payload['columns'] = unique_columns
-    return payload
+    csvobj.setColumns(unique_columns)
+    return csvobj
+
 def get_csv_type(file):
     if "hdfs" in file.lower():
         return "hdfs"
@@ -109,23 +103,16 @@ def get_csv_type(file):
     else:
         return "unknown"
 
-#takes list of columns (accounts) and distingueshes hadoop services from users
-def get_service_accounts(column_list,cdh_service_list):
-    service_accounts = []
-    user_accounts = []
-    accounts = {}
-    for column in column_list:
-        match = 0
-        for service in cdh_service_list:
-            
-            if match > 0:
-                break
-            #if it is a service, add it to service_accounts
-            elif column.translate(None,'\\*./!?#- ') == service.translate(None, '\\*./!?#- '):
-                service_accounts.append(column)
-                match += 1
-        if match == 0:
-            user_accounts.append(column)
-    accounts['service_accounts'] = service_accounts
-    accounts['user_accounts'] = user_accounts
-    return accounts
+#copies CSV to HDFS
+def copy_to_hdfs(data,hdfs_location):
+    csv_path = data['path']
+    logging.info('Copying CSV ' + csv_path + ' to HDFS path: ' + hdfs_location)
+    p = subprocess.Popen(['hdfs','dfs','-put',csv_path,hdfs_location],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    out,err = p.communicate()
+    if err:
+        logging.error(err)
+    else:
+        logging.info(out)
+        logging.info('Copy to HDFS completed')
+    data['path'] = 'hdfs:' + hdfs_location + '/' + os.path.basename(csv_path)
+    return data
