@@ -1,12 +1,15 @@
 #Class for handling CSV data
 class CSVObject():
 
-    def __init__(self, path, config, type=None, columns=None, customer=None):
+    def __init__(self, path, config, type=None, columns=None, customer=None, avro=None, schema=None, kite_class=None):
         self.path = path
         self.type = type
         self.columns = columns
         self.customer= customer
         self.config = config
+        self.avro = avro
+        self.schema = schema
+        self.kite_class = kite_class
 
     def setPath(self,input):
         self.path = input
@@ -16,6 +19,12 @@ class CSVObject():
         self.columns = input
     def setCustomer(self,input):
         self.customer = input
+    def setAvro(self,input):
+        self.avro = input
+    def setSchema(self,input):
+        self.schema = input
+    def setKiteClass(self,input):
+        self.kite_class = input
     #takes list of columns (accounts) and distingueshes hadoop services from users
     def getServiceAccounts(self):
         column_list = self.columns

@@ -21,7 +21,7 @@ def extract_csvs(file,config):
         for member in zip_files:
             if ".csv" in member:
                 logging.info('CSV identified in ' + file + '- named: ' + member + ' - sending to ' + output_folder)
-                filename = customer_name + '__' + os.path.basename(member)
+                filename = customer_name + '_' + os.path.basename(member)
                 source = zip.open(member)
                 save_location = os.path.join(output_folder, filename)
                 target = open(save_location, "wb")

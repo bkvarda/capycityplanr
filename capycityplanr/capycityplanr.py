@@ -1,4 +1,4 @@
-import logging, cmcsv, pykite, time
+import logging, cmcsv, pykite, time, avroutils, hdfsutils
 from config import Config
 from csvobject import CSVObject
 
@@ -24,5 +24,9 @@ def main():
                 user_accounts += account + '+'
             logging.info('Service Accounts: ' + service_accounts)
             logging.info('User Accounts: ' + user_accounts)
+        print(csvobj.columns)    
+        pykite.infer_schema(csvobj)
+        avroutils.csvToAvro(csvobj)
+        #hdfsutils.copyToHdfs(csvobj)
     logging.info('Capycityplanr ended')
 main()
