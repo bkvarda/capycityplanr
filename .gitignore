@@ -18,3 +18,8 @@
 *MAP*
 /REDUCE/*
 *REDUCE*
+*.avro
+**.avro
+/temp/*
+**/temp/*
+capycityplanr/temp/*

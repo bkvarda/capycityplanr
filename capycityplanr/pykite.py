@@ -13,12 +13,13 @@ def infer_schema(csvobj):
     out,err = p.communicate()
     if err:
         logging.error(err)
+        return 1
     else:
         logging.info(out)
-    logging.info('Schema inference complete')
-    csvobj.setSchema(kite_class + '.avsc')
-    csvobj.setKiteClass(kite_class)
-    return 0
+        logging.info('Schema inference complete')
+        csvobj.setSchema(save_location)
+        csvobj.setKiteClass(kite_class)
+        return 0
 
 #Creates Kite dataset
 def create_dataset(csvobj):
@@ -26,24 +27,27 @@ def create_dataset(csvobj):
     schema = csvobj.schema
     csv_path = csvobj.path
     logging.info('Creating dataset with title ' + kite_class + ' from CSV ' + csv_path)
-    p = subprocess.Popen([csvobj.kite_path,'-v','create',kite_class,'-s',schema],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    p = subprocess.Popen([csvobj.config.kite_path,'-v','create',kite_class,'-s',schema],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     out,err = p.communicate()
     if err:
         logging.error(err)
+        return 1
     else:
         logging.info(out)
-    logging.info('Dataset created')
-    return 0
+        logging.info('Dataset created')
+        return 0
 
 #Inserts CSV data into Hive (and Impala)
 def import_data(csvobj):
     kite_class = csvobj.kite_class
     csv_path = csvobj.path
     logging.info('Inserting data into Hive table ' + kite_class)
-    p = subprocess.Popen([kite_path,'-v','csv-import',csv_path,kite_class],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    p = subprocess.Popen([csvobj.config.kite_path,'-v','csv-import',csv_path,kite_class],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     out,err = p.communicate()
     if err:
         logging.error(err)
+        return 1
     else:
         logging.info(out)
-    return 0
+        logging.info('CSV data inserted into Hive/Impala')
+        return 0

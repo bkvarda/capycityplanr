@@ -24,9 +24,19 @@ def main():
                 user_accounts += account + '+'
             logging.info('Service Accounts: ' + service_accounts)
             logging.info('User Accounts: ' + user_accounts)
-        print(csvobj.columns)    
         pykite.infer_schema(csvobj)
-        avroutils.csvToAvro(csvobj)
-        #hdfsutils.copyToHdfs(csvobj)
+        pykite.create_dataset(csvobj)
+        attempts = 1
+        #Try data insertion several times due to ulimit issues. There's probably a better way.
+        while attempts < 4:
+            code = pykite.import_data(csvobj)
+            logging.info('Attempt to import data #' + str(attempts))
+            if code == 1:
+                logging.warning('Attempt # ' + str(attempts) + ' failed. Attempting again')
+                attempts +=1
+                time.sleep(10)
+            else:
+                attempts +=3
+                time.sleep(10) 
     logging.info('Capycityplanr ended')
 main()
