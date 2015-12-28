@@ -23,3 +23,5 @@
 /temp/*
 **/temp/*
 capycityplanr/temp/*
+*.sh
+
