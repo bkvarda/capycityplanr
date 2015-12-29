@@ -1,4 +1,4 @@
-import logging, cmcsv, pykite, time, avroutils, hdfsutils, impalautils
+import logging, cmcsv, pykite, time, avroutils, hdfsutils, impalautils, sys
 from config import Config
 from csvobject import CSVObject
 
@@ -16,7 +16,7 @@ def main():
     #Starting the actual process
     logging.info('Capycityplanr started')
     cmcsv.scan_folder(config.watch_dir)
-    csvs_to_process = cmcsv.extract_csvs('Capacity.zip',config)
+    csvs_to_process = cmcsv.extract_csvs(str(sys.argv[1]),config)
     for csvobj in csvs_to_process:
         csvobj = cmcsv.clean_csv(csvobj)
         if csvobj.type == 'hdfs':
@@ -26,6 +26,8 @@ def main():
                 service_accounts += account + '+'
             for account in csvobj.getUserAccounts():
                 user_accounts += account + '+'
+            print('Service accounts are: ' + service_accounts)
+            print('User accounts are: ' + user_accounts)
         pykite.infer_schema(csvobj)
         pykite.create_dataset(csvobj)
         attempts = 1

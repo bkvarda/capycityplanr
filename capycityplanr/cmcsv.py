@@ -103,16 +103,3 @@ def get_csv_type(file):
     else:
         return "unknown"
 
-#copies CSV to HDFS
-def copy_to_hdfs(data,hdfs_location):
-    csv_path = data['path']
-    logging.info('Copying CSV ' + csv_path + ' to HDFS path: ' + hdfs_location)
-    p = subprocess.Popen(['hdfs','dfs','-put',csv_path,hdfs_location],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    out,err = p.communicate()
-    if err:
-        logging.error(err)
-    else:
-        logging.info(out)
-        logging.info('Copy to HDFS completed')
-    data['path'] = 'hdfs:' + hdfs_location + '/' + os.path.basename(csv_path)
-    return data
