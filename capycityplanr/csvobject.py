@@ -61,5 +61,30 @@ class CSVObject():
                     service_accounts.append(column)
                     match += 1
             if match == 0:
-                user_accounts.append(column)
+                if column == 'Date':
+                    pass
+                else:
+                    user_accounts.append(column)
         return user_accounts
+    def getUserAccountsAsQuery(self):
+        accounts = self.getUserAccounts()
+        acct_string = ""
+        count = 0
+        for account in accounts:
+            if count == len(accounts) - 1:
+                acct_string += account
+            else:
+                acct_string += account + '+'
+                count += 1
+        return acct_string
+    def getServiceAccountsAsQuery(self):
+        accounts = self.getServiceAccounts()
+        acct_string = ""
+        count = 0
+        for account in accounts:
+            if count == len(accounts) - 1:
+                acct_string += account
+            else:
+                acct_string += account + '+'
+                count += 1
+        return acct_string 

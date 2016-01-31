@@ -1,4 +1,4 @@
-import logging, cmcsv, pykite, time, avroutils, hdfsutils, impalautils, sys
+import logging, cmcsv, pykite, time, avroutils, hdfsutils, impalautils, sys, pptutils
 from config import Config
 from csvobject import CSVObject
 
@@ -42,7 +42,6 @@ def main():
                 attempts +=4
         impalautils.invalidateMetadata(csvobj)
         impalautils.showTables(csvobj)
-        query = "select * from " + csvobj.kite_class
-        impalautils.runQueryAndOutput(query,csvobj) 
+        impalautils.executeQueryPlan(csvobj)
     logging.info('Capycityplanr ended')
 main()
